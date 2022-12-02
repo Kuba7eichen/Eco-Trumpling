@@ -6,41 +6,59 @@ using UnityEngine.AI;
 public class EnemyBehavior : MonoBehaviour
 {
     // Start is called before the first frame update
-    [SerializeField] private float health;
-    [SerializeField] private float damage;
-    [SerializeField] private float attackCooldown;
-    [SerializeField] private float walkingSpeed;
-    [SerializeField] private GameObject trump;
+    [SerializeField] private int _health;
+    [SerializeField] private int _damage;
+    [SerializeField] private float _attackCooldown;
+    [SerializeField] private float _walkingSpeed;
+    [SerializeField] private GameObject _trump;
 
 
-    private NavMeshAgent navMeshAgent;
-    private float timeSinceLastAttack;
+    private NavMeshAgent _navMeshAgent;
+    private Animator _animator;
+    private float _timeSinceLastAttack;
+    private bool _dead = false;
 
 
     void Start()
     {
-        navMeshAgent = GetComponent<NavMeshAgent>();
+        _navMeshAgent = GetComponent<NavMeshAgent>();
+        _animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(Vector3.Distance(transform.position, trump.transform.position) < 20)
+        if(_health<=0)
         {
-            navMeshAgent.destination = trump.transform.position;
-            if(Vector3.Distance(transform.position, trump.transform.position) < 1)
+            _dead = true;
+            _animator.SetTrigger("isDead");
+        }
+        if (!_dead)
+        {
+            if (Vector3.Distance(transform.position, _trump.transform.position) < 20)
             {
-                Attack();
+                _animator.SetTrigger("trumpInProximity");
+                _navMeshAgent.destination = _trump.transform.position;
+                if (Vector3.Distance(transform.position, _trump.transform.position) < 1)
+                {
+                    Attack();
+                }
             }
         }
-        timeSinceLastAttack += Time.deltaTime;
+        _timeSinceLastAttack += Time.deltaTime;
     }
     private void Attack()
     {
-        if (timeSinceLastAttack > attackCooldown)
+        if (_timeSinceLastAttack > _attackCooldown)
         {
-            trump.GetComponent<PlayerBehavior>().ApplyDamage(damage);
-            timeSinceLastAttack = 0f;
+            _animator.SetTrigger("hittingTrump");
+            _trump.GetComponent<PlayerBehavior>().ApplyDamage(_damage);
+            _timeSinceLastAttack = 0f;
         }
+    }
+
+    public void ApplyDamage(int damage)
+    {
+        _health -= damage;
     }
 }
